@@ -1,0 +1,64 @@
+#######################################
+# Use a Docker-in-Docker image to run docker commands in the Gitlab-CI runner docker image.
+#######################################
+image: registry.mindef.nl/docker/ubuntu-did:latest
+
+#######################################
+# Define the stages in their specific order
+#######################################
+stages:
+  - build
+  - test
+  - promote
+  
+#######################################
+# Global variables
+#######################################
+variables:
+  GIT_STRATEGY: clone
+
+#######################################
+# Build the  image 
+# It is based in the Dockerfile
+#######################################
+build-image:
+  stage: build
+  script:
+    # Login to the registry
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+    # Build the image based in the Dockerfile.test
+    - docker build -t $CI_REGISTRY_IMAGE:16.04-test .
+    # Push images to Gitlab registry
+    - docker push $CI_REGISTRY_IMAGE:16.04-test
+    # Remove the local images
+    - docker rmi -f $CI_REGISTRY_IMAGE:16.04-test
+
+#######################################
+# Test the image 
+#######################################
+test-image:
+  stage: test
+  variables:
+    GIT_STRATEGY: none
+  image: $CI_REGISTRY_IMAGE:16.04-test
+  script:
+    - apt-get update
+    - apt-get install -qqy iputils-ping
+    - ping -c 4 intranet.mindef.nl
+    - php --version
+ 
+# Promote   
+promote-image:
+  stage: promote
+  script:
+    # Login to the registry
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+    # Build the image based in the Dockerfile.test
+    - docker pull $CI_REGISTRY_IMAGE:16.04-test
+    # Re-tag to latest
+    - docker tag $CI_REGISTRY_IMAGE:16.04-test $CI_REGISTRY_IMAGE:16.04
+    # Push images to Gitlab registry
+    - docker push $CI_REGISTRY_IMAGE:16.04
+    # Remove the local images
+    - docker rmi -f $CI_REGISTRY_IMAGE:16.04
+    - docker rmi -f $CI_REGISTRY_IMAGE:16.04-test

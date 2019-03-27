@@ -1,0 +1,45 @@
+
+
+<VirtualHost *:80>
+        ServerAdmin webmaster@localhost
+
+        DocumentRoot /var/www/html
+        <Directory />
+                Options FollowSymLinks
+                AllowOverride None
+        </Directory>
+        <Directory /var/www/html>
+                Options Indexes FollowSymLinks MultiViews
+                # To make .htaccess work
+                AllowOverride FileInfo
+                Order allow,deny
+                allow from all
+		Require all granted
+        </Directory>
+
+        ScriptAlias /cgi-bin/ /usr/lib/cgi-bin/
+        <Directory "/usr/lib/cgi-bin">
+                AllowOverride None
+                Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
+                Order allow,deny
+                Allow from all
+        </Directory>
+
+        ErrorLog /tmp/error.log
+
+        # Possible values include: debug, info, notice, warn, error, crit,
+        # alert, emerg.
+        LogLevel warn
+
+        CustomLog /tmp/access.log combined
+
+	#
+	# Set HTTPS environment variable if we came in over secure
+	#  channel.
+	SetEnvIf x-forwarded-proto https HTTPS=on
+
+	#
+	# Set REMOTE_USER if one is forwarded from our reverse proxy
+	SetEnvIf X-Forwarded-User (.*) REMOTE_USER=$1
+
+</VirtualHost>
