@@ -1,6 +1,7 @@
 # Base it on Alpine-linux(latest)
-FROM registry.mindef.nl/docker/alpine-linux:latest
-MAINTAINER w.vd.velde.04@mindef.nl
+# FROM registry.mindef.nl/docker/alpine-linux:latest
+FROM alpine:3.9
+MAINTAINER ryan@famvdwal.net
 
 # Install packages (PHP 5 and Apache)
 RUN apk update
@@ -20,7 +21,8 @@ ADD start-apache2.sh /start-apache2.sh
 RUN chmod 755 /*.sh
 
 # Add supervisor config for webserver
-RUN mkdir /etc/supervisor.d/ /run/apache2
+# RUN mkdir /etc/supervisor.d/ /run/apache2
+RUN mkdir /etc/supervisor.d/ 
 ADD supervisord.conf /etc
 ADD supervisord-apache2.conf /etc/supervisor.d/supervisord-apache2.conf
 
